@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMC 8 Practice Hub (2011-2025)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --success: #22c55e; --error: #ef4444; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: #1e293b; line-height: 1.6; margin: 0; padding: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+        header { text-align: center; margin-bottom: 40px; }
+        h1 { margin: 0; color: #0f172a; font-size: 2.2rem; }
+        .subtitle { color: #64748b; margin-top: 8px; }
+
+        /* 筛选器样式 */
+        .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 30px; position: sticky; top: 10px; z-index: 100; }
+        .filter-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: #475569; display: block; }
+        .filter-box { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-btn { padding: 6px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: white; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* 题目卡片样式 */
+        .question-card { background: white; border-radius: 16px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; transition: transform 0.2s; }
+        .meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .module-tag { font-size: 0.7rem; text-transform: uppercase; background: #eff6ff; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-weight: 700; letter-spacing: 0.05em; }
+        .year-tag { color: #94a3b8; font-size: 0.85rem; font-weight: 500; }
+        .q-text { font-size: 1.15rem; margin-bottom: 25px; color: #1e293b; overflow-x: auto; }
+
+        /* 选项样式 */
+        .options-grid { display: grid; gap: 12px; }
+        .option { padding: 14px 18px; border: 2px solid #f1f5f9; border-radius: 10px; cursor: pointer; transition: all 0.2s; background: #f8fafc; font-size: 1rem; }
+        .option:hover { border-color: #cbd5e1; background: #f1f5f9; }
+        .option.selected-wrong { background: #fee2e2; border-color: var(--error); color: #991b1b; }
+        .option.is-correct { background: #dcfce7; border-color: var(--success); color: #166534; font-weight: 600; }
+
+        /* 操作按钮 */
+        .card-footer { margin-top: 25px; padding-top: 20px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: flex-end; }
+        .btn-reveal { background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+        
+        #status-msg { text-align: center; padding: 40px; color: #64748b; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AMC 8 Practice Hub</h1>
+            <p class="subtitle">2011 - 2025 Archive | 350 Questions Organized by Module</p>
+        </header>
+
+        <div class="filter-section">
+            <span class="filter-title">Filter by Module:</span>
+            <div class="filter-box" id="filter-box">
+                <button class="filter-btn active" onclick="filterQuestions('All', this)">All</button>
+            </div>
+        </div>
+
+        <div id="quiz-container">
+            <div id="status-msg">Loading problem set...</div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        const container = document.getElementById('quiz-container');
+
+        async function init() {
+            try {
+                const response = await fetch('AMC8_2011_2025_Module_Bank.json');
+                allData = await response.json();
+                
+                // 提取唯一模块并排序
+                const modules = ['All', ...new Set(allData.map(q => q.module).filter(Boolean))].sort();
+                const filterBox = document.getElementById('filter-box');
+                filterBox.innerHTML = modules.map(m => 
+                    `<button class="filter-btn ${m==='All'?'active':''}" onclick="filterQuestions('${m}', this)">${m}</button>`
+                ).join('');
+
+                renderQuestions(allData);
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div id="status-msg" style="color:red">Error: Could not load JSON data. Make sure 'AMC8_2011_2025_Module_Bank.json' is in the same folder.</div>`;
+            }
+        }
+
+        function renderQuestions(questions) {
+            container.innerHTML = '';
+            if(questions.length === 0) {
+                container.innerHTML = '<div id="status-msg">No questions found in this module.</div>';
+                return;
+            }
+
+            questions.forEach((q, i) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="meta">
+                        <span class="module-tag">${q.module || 'General'}</span>
+                        <span class="year-tag">${q.year} AMC 8</span>
+                    </div>
+                    <div class="q-text"><strong>${i + 1}.</strong> ${q.content}</div>
+                    <div class="options-grid" id="opts-${i}">
+                        ${q.options.map((opt, idx) => `
+                            <div class="option" onclick="handleSelect(this, '${opt}', '${q.answer}', ${i})">
+                                ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn-reveal" onclick="revealAnswer(${i}, '${q.answer}')">Show Answer</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // 执行 KaTeX 渲染
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError : false
+            });
+        }
+
+        function filterQuestions(moduleName, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const filtered = moduleName === 'All' ? allData : allData.filter(q => q.module === moduleName);
+            renderQuestions(filtered);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleSelect(el, selectedText, correctLetter, qIndex) {
+            const optionsInCard = document.getElementById(`opts-${qIndex}`).querySelectorAll('.option');
+            
+            // 清除该题之前的选择状态
+            optionsInCard.forEach(opt => opt.classList.remove('selected-wrong', 'is-correct'));
+
+            // 逻辑：判断选中的文字是否以正确字母开头 (例如 "C) " 匹配 "C")
+            const isCorrect = selectedText.trim().startsWith(correctLetter);
+
+            if (isCorrect) {
+                el.classList.add('is-correct');
+            } else {
+                el.classList.add('selected-wrong');
+                // 自动高亮正确的那一个
+                optionsInCard.forEach(opt => {
+                    if(opt.innerText.trim().startsWith(correctLetter)) {
+                        opt.classList.add('is-correct');
+                    }
+                });
+            }
+        }
+
+        function revealAnswer(qIndex, correctLetter) {
+            const optionsInCard = document.getElementById(`opts-${qIndex}`).querySelectorAll('.option');
+            optionsInCard.forEach(opt => {
+                if(opt.innerText.trim().startsWith(correctLetter)) {
+                    opt.classList.add('is-correct');
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
