@@ -40,6 +40,15 @@ function normalizeMathSpacing(text) {
   return text.replace(/\s+/g, " ").replace(/\s*([=+\-*/,:;()])\s*/g, "$1").trim();
 }
 
+function extractProblemBlock(raw) {
+  const header = raw.match(/==\s*Problem.*?==/i);
+  if (!header) return "";
+  const start = header.index + header[0].length;
+  const rest = raw.slice(start);
+  const nextHeading = rest.match(/^==[^=\n].*?==\s*$/m);
+  return (nextHeading ? rest.slice(0, nextHeading.index) : rest).trim();
+}
+
 function stripMarkup(text) {
   return normalize(
     text
@@ -53,9 +62,9 @@ function stripMarkup(text) {
 }
 
 function extractProblemStatement(raw) {
-  const match = raw.match(/==\s*Problem.*?==\s*([\s\S]*?)(?:==\s*Solution|$)/i);
-  if (!match) return "";
-  const statement = match[1].trim().split(/\n\s*\n/)[0];
+  const block = extractProblemBlock(raw);
+  if (!block) return "";
+  const statement = block.split(/\n\s*\n/)[0];
   return normalize(stripMarkup(statement));
 }
 
@@ -82,18 +91,27 @@ function cleanWikiText(text) {
     convertMathTags(text)
       .replace(/<asy>[\s\S]*?<\/asy>/g, "[图形见原题链接]")
       .replace(/\[\[(?:Image|File):(.*?)(\|.*?)?\]\]/gi, "[图形见原题链接]")
+      .replace(/<!--[\s\S]*?-->/g, " ")
       .replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, "$1")
       .replace(/\{\{[\s\S]*?\}\}/g, " ")
   );
 }
 
+function extractImageUrls(block) {
+  const files = [...block.matchAll(/\[\[(?:Image|File):([^|\]]+)/gi)]
+    .map((match) => match[1].trim())
+    .filter(Boolean);
+  return [...new Set(files)].map((name) => ({
+    name,
+    url: `https://artofproblemsolving.com/wiki/index.php?title=Special:Redirect/file/${encodeURIComponent(name)}`,
+  }));
+}
+
 function extractProblemParts(raw) {
-  const match = raw.match(/==\s*Problem.*?==\s*([\s\S]*?)(?:==\s*Solution|$)/i);
-  if (!match) {
+  const block = extractProblemBlock(raw);
+  if (!block) {
     return { content: "", options: [], hasFigure: false };
   }
-
-  const block = match[1].trim();
   const hasFigure = /\[\[(?:Image|File):/i.test(block) || /<asy>[\s\S]*?<\/asy>/i.test(block);
   const mathBlocks = [...block.matchAll(/<(?:math|cmath|imath)>([\s\S]*?)<\/(?:math|cmath|imath)>/g)];
   const optionBlocks = mathBlocks
@@ -111,7 +129,8 @@ function extractProblemParts(raw) {
 
   const content = cleanWikiText(promptBlock);
   const options = parseOptions(optionBlocks);
-  return { content, options, hasFigure };
+  const images = extractImageUrls(block);
+  return { content, options, hasFigure, images };
 }
 
 function escapeRegExp(text) {
@@ -274,6 +293,7 @@ function buildRows() {
         options: normalizedOptions.length === 5 ? normalizedOptions : ["A", "B", "C", "D", "E"].map((label) => ({ label, text: `(${label})` })),
         answer: answers[num - 1] || "",
         has_figure: quiz.hasFigure,
+        images: quiz.images || [],
       });
     }
   }
@@ -306,6 +326,7 @@ function writeQuizJson(rows) {
     options: row.options,
     answer: row.answer,
     has_figure: row.has_figure,
+    images: row.images || [],
     source_url: row.source_url,
   }));
   fs.writeFileSync(path.join(ROOT, "amc8_quiz_data.json"), JSON.stringify(quizRows, null, 2), "utf8");
