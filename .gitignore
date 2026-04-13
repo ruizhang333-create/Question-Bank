@@ -1,0 +1,13 @@
+# Ignore everything by default so this repo only publishes the quiz site
+*
+
+# Keep deployment files
+!.gitignore
+!README.md
+!index.html
+!amc8_quiz_data.json
+!build_amc8_bank.js
+!download_amc8_raw.ps1
+!.github/
+!.github/workflows/
+!.github/workflows/pages.yml

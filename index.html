@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMC 8 题库练习</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #475569;
+            --line: #dbe4ef;
+            --paper: #fffdf8;
+            --warm: #f4ede1;
+            --accent: #b45309;
+            --accent-dark: #92400e;
+            --accent-soft: #fff1db;
+            --right: #166534;
+            --right-bg: #dcfce7;
+            --wrong: #991b1b;
+            --wrong-bg: #fee2e2;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: Georgia, "Times New Roman", "Noto Serif SC", serif;
+            background:
+                radial-gradient(circle at top left, rgba(180, 83, 9, 0.08), transparent 28%),
+                linear-gradient(180deg, #f8f4ec 0%, #f4efe5 100%);
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 18px 64px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(180, 83, 9, 0.12), rgba(255,255,255,0.95));
+            border: 1px solid rgba(146, 64, 14, 0.14);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.05;
+            letter-spacing: 0.01em;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.02rem;
+        }
+
+        .panel {
+            margin-top: 18px;
+            background: rgba(255,255,255,0.88);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 18px;
+            backdrop-filter: blur(8px);
+        }
+
+        .toolbar {
+            display: grid;
+            gap: 14px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip, .action-btn, .submit-btn {
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            padding: 9px 14px;
+            background: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+            color: var(--ink);
+        }
+
+        .chip:hover, .action-btn:hover, .submit-btn:hover {
+            transform: translateY(-1px);
+            border-color: #c7a76a;
+        }
+
+        .chip.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .action-btn {
+            background: var(--accent-soft);
+            border-color: #ebc58c;
+        }
+
+        .submit-btn {
+            background: var(--accent-dark);
+            color: white;
+            border-color: var(--accent-dark);
+            font-weight: 700;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 14px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .stat-value {
+            margin-top: 6px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .notice {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .question-list {
+            margin-top: 24px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .question-card {
+            background: var(--paper);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .badge-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 0.82rem;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: var(--accent-dark);
+            border: 1px solid #fed7aa;
+        }
+
+        .question-title {
+            margin: 0 0 14px;
+            font-size: 1.08rem;
+            line-height: 1.75;
+        }
+
+        .option-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            display: block;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+        .option input { margin-right: 10px; }
+        .option.correct {
+            background: var(--right-bg);
+            border-color: #86efac;
+            color: var(--right);
+            font-weight: 700;
+        }
+        .option.wrong {
+            background: var(--wrong-bg);
+            border-color: #fca5a5;
+            color: var(--wrong);
+            font-weight: 700;
+        }
+        .option.dimmed {
+            opacity: 0.82;
+        }
+
+        .feedback {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        .feedback.show { display: block; }
+        .feedback.ok {
+            background: var(--right-bg);
+            color: var(--right);
+            border: 1px solid #86efac;
+        }
+        .feedback.bad {
+            background: var(--wrong-bg);
+            color: var(--wrong);
+            border: 1px solid #fca5a5;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .link-btn {
+            color: var(--accent-dark);
+            text-decoration: none;
+            font-size: 0.92rem;
+        }
+
+        .empty, .error-box {
+            margin-top: 24px;
+            padding: 22px;
+            border-radius: 18px;
+            background: white;
+            border: 1px solid var(--line);
+        }
+
+        @media (max-width: 720px) {
+            .hero, .panel, .question-card { padding: 18px; }
+            .page { padding-left: 12px; padding-right: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <section class="hero">
+            <h1>AMC 8 在线题库</h1>
+            <p>学生和家长可以直接在网页上筛选模块、按年份练习、提交后立刻看到正误。站点基于 GitHub Pages，可免费生成公开链接。</p>
+        </section>
+
+        <section class="panel">
+            <div class="toolbar">
+                <div>
+                    <strong>模块筛选</strong>
+                    <div class="chips" id="module-chips"></div>
+                </div>
+                <div>
+                    <strong>年份筛选</strong>
+                    <div class="chips" id="year-chips"></div>
+                </div>
+                <div class="row">
+                    <button class="action-btn" id="shuffle-btn">随机 10 题</button>
+                    <button class="action-btn" id="reset-btn">清空作答</button>
+                    <button class="submit-btn" id="submit-all-btn">提交并判分</button>
+                </div>
+            </div>
+
+            <div class="summary">
+                <div class="stat">
+                    <div class="stat-label">当前题量</div>
+                    <div class="stat-value" id="count-stat">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">已作答</div>
+                    <div class="stat-value" id="answered-stat">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">答对</div>
+                    <div class="stat-value" id="correct-stat">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">正确率</div>
+                    <div class="stat-value" id="rate-stat">0%</div>
+                </div>
+            </div>
+
+            <div class="notice">
+                说明：少量 AMC 8 题目原题依赖图形，页面中会保留原题链接；若当前卡片提示“图形见原题链接”，可点击原题查看完整题面。
+            </div>
+        </section>
+
+        <main id="question-list" class="question-list">
+            <div class="empty">题库加载中...</div>
+        </main>
+    </div>
+
+    <script>
+        const state = {
+            all: [],
+            filtered: [],
+            currentModule: "全部",
+            currentYear: "全部",
+            answers: {},
+            graded: false
+        };
+
+        const moduleChips = document.getElementById("module-chips");
+        const yearChips = document.getElementById("year-chips");
+        const questionList = document.getElementById("question-list");
+        const countStat = document.getElementById("count-stat");
+        const answeredStat = document.getElementById("answered-stat");
+        const correctStat = document.getElementById("correct-stat");
+        const rateStat = document.getElementById("rate-stat");
+
+        function renderMath() {
+            if (!window.renderMathInElement) return;
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true },
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ],
+                throwOnError: false
+            });
+        }
+
+        async function init() {
+            try {
+                const response = await fetch(`./amc8_quiz_data.json?v=${Date.now()}`);
+                if (!response.ok) {
+                    throw new Error(`题库文件加载失败（HTTP ${response.status}）`);
+                }
+                state.all = await response.json();
+                buildFilters();
+                applyFilters();
+            } catch (error) {
+                questionList.innerHTML = `
+                    <div class="error-box">
+                        <strong>页面加载失败：</strong>${error.message}<br><br>
+                        请确认仓库中存在 <code>amc8_quiz_data.json</code>，并且 GitHub Pages 已部署完成。
+                    </div>
+                `;
+            }
+        }
+
+        function buildFilters() {
+            const modules = ["全部", ...new Set(state.all.map(item => item.module).filter(Boolean))];
+            const years = ["全部", ...new Set(state.all.map(item => item.year).filter(Boolean))].sort((a, b) => {
+                if (a === "全部") return -1;
+                if (b === "全部") return 1;
+                return Number(a) - Number(b);
+            });
+
+            renderChips(moduleChips, modules, state.currentModule, (value) => {
+                state.currentModule = value;
+                applyFilters();
+            });
+
+            renderChips(yearChips, years, state.currentYear, (value) => {
+                state.currentYear = value;
+                applyFilters();
+            });
+        }
+
+        function renderChips(container, values, activeValue, onClick) {
+            container.innerHTML = "";
+            values.forEach((value) => {
+                const btn = document.createElement("button");
+                btn.className = `chip ${value === activeValue ? "active" : ""}`;
+                btn.textContent = value;
+                btn.addEventListener("click", () => onClick(value));
+                container.appendChild(btn);
+            });
+        }
+
+        function applyFilters() {
+            state.filtered = state.all.filter((item) => {
+                const byModule = state.currentModule === "全部" || item.module === state.currentModule;
+                const byYear = state.currentYear === "全部" || item.year === state.currentYear;
+                return byModule && byYear;
+            });
+            state.graded = false;
+            renderChips(moduleChips, ["全部", ...new Set(state.all.map(item => item.module).filter(Boolean))], state.currentModule, (value) => {
+                state.currentModule = value;
+                applyFilters();
+            });
+            renderChips(yearChips, ["全部", ...new Set(state.all.map(item => item.year).filter(Boolean))].sort((a, b) => {
+                if (a === "全部") return -1;
+                if (b === "全部") return 1;
+                return Number(a) - Number(b);
+            }), state.currentYear, (value) => {
+                state.currentYear = value;
+                applyFilters();
+            });
+            renderQuestions(state.filtered);
+            updateStats();
+        }
+
+        function questionId(item) {
+            return `${item.year}-${item.problem}`;
+        }
+
+        function renderQuestions(questions) {
+            if (questions.length === 0) {
+                questionList.innerHTML = `<div class="empty">当前筛选条件下没有题目。</div>`;
+                return;
+            }
+
+            questionList.innerHTML = questions.map((item, index) => {
+                const qid = questionId(item);
+                const selected = state.answers[qid] || "";
+                const normalizedOptions = (item.options && item.options.length === 5)
+                    ? item.options
+                    : ["A", "B", "C", "D", "E"].map((label) => ({ label, text: `(${label})` }));
+                const optionHtml = normalizedOptions.map((option) => `
+                    <label class="option" data-qid="${qid}" data-label="${option.label}">
+                        <input type="radio" name="q-${qid}" value="${option.label}" ${selected === option.label ? "checked" : ""}>
+                        <span>${option.text}</span>
+                    </label>
+                `).join("");
+
+                const fallback = !item.options || item.options.length !== 5
+                    ? `<div>
+                            <div class="empty" style="margin-bottom:12px;">这道题的选项或图形未完整解析，页面仍提供 A-E 作答；建议同时打开原题链接查看完整题面。</div>
+                            ${optionHtml}
+                       </div>`
+                    : optionHtml;
+
+                return `
+                    <article class="question-card" id="card-${qid}">
+                        <div class="card-top">
+                            <div class="badge-group">
+                                <span class="badge">${index + 1}. ${item.year} AMC 8 P${item.problem}</span>
+                                <span class="badge">${item.module}</span>
+                                <span class="badge">${item.submodule}</span>
+                                <span class="badge">${item.difficulty}</span>
+                            </div>
+                            <div style="color:#64748b;font-size:0.92rem;">${item.focus || ""}</div>
+                        </div>
+                        <p class="question-title">${item.content || "题干解析失败，请点击原题链接。"}</p>
+                        ${item.has_figure ? `<div class="notice">本题可能含图形，若题面信息不足，请打开原题链接。</div>` : ""}
+                        <div class="option-list">${fallback}</div>
+                        <div class="feedback" id="feedback-${qid}"></div>
+                        <div class="card-actions">
+                            <button class="action-btn" onclick="gradeOne('${qid}')">提交本题</button>
+                            <a class="link-btn" href="${item.source_url}" target="_blank" rel="noreferrer">查看 AoPS 原题</a>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+
+            bindOptionEvents();
+            if (state.graded) {
+                gradeAll();
+            }
+            renderMath();
+        }
+
+        function bindOptionEvents() {
+            document.querySelectorAll('.option input').forEach((input) => {
+                input.addEventListener('change', (event) => {
+                    const name = event.target.name.replace(/^q-/, '');
+                    state.answers[name] = event.target.value;
+                    state.graded = false;
+                    clearVisualState(name);
+                    updateStats();
+                });
+            });
+        }
+
+        function clearVisualState(qid) {
+            document.querySelectorAll(`[data-qid="${qid}"]`).forEach((label) => {
+                label.classList.remove("correct", "wrong", "dimmed");
+            });
+            const feedback = document.getElementById(`feedback-${qid}`);
+            if (feedback) {
+                feedback.className = "feedback";
+                feedback.textContent = "";
+            }
+        }
+
+        function gradeOne(qid) {
+            const item = state.filtered.find((entry) => questionId(entry) === qid);
+            if (!item) return;
+            applyGrade(item);
+            updateStats();
+        }
+
+        function applyGrade(item) {
+            const qid = questionId(item);
+            const selected = state.answers[qid];
+            const labels = document.querySelectorAll(`[data-qid="${qid}"]`);
+            const feedback = document.getElementById(`feedback-${qid}`);
+
+            labels.forEach((label) => {
+                label.classList.remove("correct", "wrong", "dimmed");
+                const optionLabel = label.getAttribute("data-label");
+                if (optionLabel === item.answer) {
+                    label.classList.add("correct");
+                } else if (selected && optionLabel === selected) {
+                    label.classList.add("wrong");
+                } else if (selected) {
+                    label.classList.add("dimmed");
+                }
+            });
+
+            if (!feedback) return;
+
+            if (!selected) {
+                feedback.className = "feedback show bad";
+                feedback.textContent = "还没有选择答案。";
+                return;
+            }
+
+            if (selected === item.answer) {
+                feedback.className = "feedback show ok";
+                feedback.textContent = `回答正确。标准答案：${item.answer}`;
+            } else {
+                feedback.className = "feedback show bad";
+                feedback.textContent = `回答错误。你的答案：${selected}；标准答案：${item.answer}`;
+            }
+        }
+
+        function gradeAll() {
+            state.graded = true;
+            state.filtered.forEach(applyGrade);
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = state.filtered.length;
+            const answered = state.filtered.filter((item) => state.answers[questionId(item)]).length;
+            const correct = state.filtered.filter((item) => state.answers[questionId(item)] === item.answer).length;
+            countStat.textContent = total;
+            answeredStat.textContent = answered;
+            correctStat.textContent = correct;
+            rateStat.textContent = answered ? `${Math.round((correct / answered) * 100)}%` : "0%";
+        }
+
+        function shuffleCurrent() {
+            const copy = [...state.filtered];
+            for (let i = copy.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            renderQuestions(copy.slice(0, 10));
+            countStat.textContent = Math.min(10, copy.length);
+            answeredStat.textContent = copy.slice(0, 10).filter((item) => state.answers[questionId(item)]).length;
+            const correct = copy.slice(0, 10).filter((item) => state.answers[questionId(item)] === item.answer).length;
+            correctStat.textContent = correct;
+            const answered = copy.slice(0, 10).filter((item) => state.answers[questionId(item)]).length;
+            rateStat.textContent = answered ? `${Math.round((correct / answered) * 100)}%` : "0%";
+        }
+
+        function resetAnswers() {
+            state.answers = {};
+            state.graded = false;
+            renderQuestions(state.filtered);
+            updateStats();
+        }
+
+        document.getElementById("submit-all-btn").addEventListener("click", gradeAll);
+        document.getElementById("shuffle-btn").addEventListener("click", shuffleCurrent);
+        document.getElementById("reset-btn").addEventListener("click", resetAnswers);
+
+        window.gradeOne = gradeOne;
+        init();
+    </script>
+</body>
+</html>
